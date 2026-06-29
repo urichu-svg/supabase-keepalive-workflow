@@ -13,11 +13,14 @@ jobs:
       - name: Ping Supabase REST API
         run: |
           echo "Pinging Supabase to keep the project active..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+          RESPONSE=$(curl -s -w $'\n%{http_code}' \
             "${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?select=*&limit=1" \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
           echo "HTTP status: $HTTP_CODE"
+          echo "Response body: $BODY"
           # 2xx 都算成功；其餘視為失敗讓 workflow 變紅，方便收到通知
           if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
             echo "Keepalive failed!"
